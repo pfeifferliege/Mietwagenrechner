@@ -2,12 +2,14 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-<link rel="manifest" href="/manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TaxiRechner">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TaxiRechner">
 
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <!-- Stellen Sie sicher, dass dieser Dateiname mit dem Icon auf dem Server übereinstimmt -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png"> 
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taxifahrpreisrechner - Premium-Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -47,6 +49,7 @@
 </head>
 <body class="p-4 flex flex-col items-center min-h-screen">
 
+    <!-- Sticky Header -->
     <div class="w-full max-w-lg sticky-header bg-indigo-700 p-5 md:p-6">
         <h2 class="text-sm font-semibold text-indigo-300 mb-1 uppercase tracking-wider">Ihr aktueller Fahrpreis:</h2>
         <div class="flex justify-between items-end">
@@ -55,41 +58,56 @@
         </div>
     </div>
 
+    <!-- Main Content Card -->
     <div class="w-full max-w-lg card bg-white rounded-xl p-6 md:p-8">
         <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Preisdetails eingeben</h1>
         <p class="text-gray-500 mb-8 border-b pb-4">Geben Sie Ihre Fahrtparameter ein, um die Gesamtkosten zu berechnen.</p>
 
         <div class="space-y-6">
 
+            <!-- NEU: Eingabefeld für Fahrgastname (optional) -->
+            <div>
+                <label for="passengerNameInput" class="block text-sm font-semibold text-gray-700 mb-1">
+                    Name des Fahrgastes (Optional)
+                </label>
+                <input type="text" id="passengerNameInput" value=""
+                        placeholder="Z.B. Max Mustermann"
+                        class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
+                        aria-label="Name des Fahrgastes">
+            </div>
+
+            <!-- Fahrstrecke -->
             <div>
                 <label for="distanceKm" class="block text-sm font-semibold text-gray-700 mb-1">
                     Fahrstrecke (km)
                 </label>
                 <input type="number" id="distanceKm" value="" min="0" step="0.1"
-                       placeholder="Bitte km eingeben"
-                       oninput="calculateFare()"
-                       class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
-                       aria-label="Fahrstrecke in Kilometern">
+                        placeholder="Bitte km eingeben"
+                        oninput="calculateFare()"
+                        class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
+                        aria-label="Fahrstrecke in Kilometern">
             </div>
 
+            <!-- Wartezeit -->
             <div>
                 <label for="waitingMinutes" class="block text-sm font-semibold text-gray-700 mb-1">
                     Stand-/Wartezeit (Minuten)
                 </label>
                 <input type="number" id="waitingMinutes" value="" min="0" step="1"
-                       placeholder="Wartezeit in Minuten eingeben"
-                       oninput="calculateFare()"
-                       class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
-                       aria-label="Wartezeit in Minuten">
+                        placeholder="Wartezeit in Minuten eingeben"
+                        oninput="calculateFare()"
+                        class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
+                        aria-label="Wartezeit in Minuten">
             </div>
 
+            <!-- Zuschläge -->
             <div class="space-y-4 pt-2 pb-4 border-t border-b">
                 <p class="text-sm font-semibold text-gray-700">Optionale Zuschläge:</p>
                 
                 <div class="flex items-center">
                     <input id="isNight" type="checkbox" onchange="calculateFare()"
-                           class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                           aria-label="Nachtzuschlag aktivieren">
+                            class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                            aria-label="Nachtzuschlag aktivieren">
                     <label for="isNight" class="ml-3 text-base font-medium text-gray-700">
                         Nachtfahrt (22:00 - 06:00 Uhr)
                     </label>
@@ -97,8 +115,8 @@
                 
                 <div class="flex items-center">
                     <input id="isWheelchair" type="checkbox" onchange="calculateFare()"
-                           class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                           aria-label="Rollstuhlzuschlag aktivieren">
+                            class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                            aria-label="Rollstuhlzuschlag aktivieren">
                     <label for="isWheelchair" class="ml-3 text-base font-medium text-gray-700">
                         Rollstuhlzuschlag
                     </label>
@@ -112,10 +130,11 @@
             
             <button onclick="shareViaWhatsapp()" 
                     class="w-full bg-green-500 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-150 ease-in-out">
-                Per WhatsApp teilen 📲
+                Per WhatsApp teilen (Direkt) 📲
             </button>
         </div>
 
+        <!-- Kosten-Aufschlüsselung -->
         <div class="mt-8 border-t pt-6 bg-gray-50 p-4 rounded-lg">
             <h3 class="text-xl font-extrabold text-gray-800 mb-4 border-b pb-2">Kosten-Aufschlüsselung</h3>
             <div class="space-y-3 text-base">
@@ -159,6 +178,7 @@
 
         // Hilfsfunktion zur Formatierung als Währung (Deutsch)
         function formatCurrency(amount) {
+            // Stellt sicher, dass die Währungsanzeige korrekt ist (z.B. 12,34 €)
             return amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
         }
 
@@ -205,6 +225,7 @@
 
             // 4. Gesamtfahrpreis
             totalFare = baseFare + distanceCost + waitingCost + nightSurcharge + wheelchairSurcharge;
+            // Rundet auf zwei Dezimalstellen
             totalFare = Math.round(totalFare * 100) / 100;
 
             // Ergebnis im UI anzeigen
@@ -223,6 +244,8 @@
          * Setzt alle Eingabefelder auf ihren Standardwert (leer oder false) zurück und berechnet neu.
          */
         function resetInputs() {
+            // Setzt auch das neue Namensfeld zurück
+            document.getElementById('passengerNameInput').value = ''; 
             document.getElementById('distanceKm').value = ''; 
             document.getElementById('waitingMinutes').value = '';
             document.getElementById('isNight').checked = false;
@@ -232,51 +255,43 @@
         }
 
         /**
-         * NEU: Teilt den berechneten Fahrpreis per WhatsApp.
-         * Fragt den Namen des Fahrgastes ab und erstellt eine detaillierte Nachricht.
+         * Teilt den berechneten Fahrpreis per WhatsApp OHNE Rückfrage.
+         * Liest den Namen direkt aus dem neuen Eingabefeld.
          */
         function shareViaWhatsapp() {
-            // Gesamtfahrpreis abrufen
+            // 1. Gesamtfahrpreis abrufen
             const totalFareText = document.getElementById('totalFare').textContent;
 
-            // Namen des Fahrgastes abfragen
-            const passengerName = prompt("Bitte geben Sie den Namen des Fahrgastes ein:");
+            // 2. Name DIREKT aus dem Eingabefeld lesen (kein prompt)
+            const passengerNameInput = document.getElementById('passengerNameInput');
+            // Wenn das Feld leer ist, wird ein Standardname verwendet, um den Fluss nicht zu unterbrechen
+            let passengerName = passengerNameInput.value.trim() || "der Fahrgast"; 
 
-            // Abbruch, falls kein Name eingegeben wurde
-            if (!passengerName) {
-                alert("Der Vorgang wurde abgebrochen, da kein Name eingegeben wurde.");
-                return;
-            }
-            
-            // Eingabewerte für Details abrufen
+            // 3. Eingabewerte für Details abrufen
             const distanceKm = parseFloat(document.getElementById('distanceKm').value) || 0;
             const waitingMinutes = parseInt(document.getElementById('waitingMinutes').value, 10) || 0;
             const isNight = document.getElementById('isNight').checked;
             const isWheelchair = document.getElementById('isWheelchair').checked;
             
-            // 2. Detaillierte Nachricht konstruieren
+            // 4. Detaillierte Nachricht konstruieren
             let message = `Fahrt von ${passengerName} kostet ${totalFareText}.\n\n`;
             message += `DETAILS:\n`;
             message += `Grundgebühr: ${formatCurrency(TARIFFS.BASE_FARE)}\n`;
             
-            // Distanz nur hinzufügen, wenn > 0 km
             if (distanceKm > 0) {
                 const distanceCost = calculateDistanceCost(distanceKm);
                 message += `Distanzkosten (${distanceKm} km): ${formatCurrency(distanceCost)}\n`;
             }
             
-            // Wartezeit nur hinzufügen, wenn > 0 Minuten
             if (waitingMinutes > 0) {
                 const waitingCost = waitingMinutes * TARIFFS.WAITING_RATE_PER_MINUTE;
                 message += `Wartezeit (${waitingMinutes} Min): ${formatCurrency(waitingCost)}\n`;
             }
             
-            // Nachtzuschlag nur hinzufügen, wenn aktiviert
             if (isNight) {
                 message += `Nachtzuschlag: ${formatCurrency(TARIFFS.NIGHT_SURCHARGE)}\n`;
             }
             
-            // Rollstuhlzuschlag nur hinzufügen, wenn aktiviert
             if (isWheelchair) {
                 message += `Rollstuhlzuschlag: ${formatCurrency(TARIFFS.WHEELCHAIR_SURCHARGE)}\n`;
             }
@@ -284,13 +299,11 @@
             // Endsumme hinzufügen
             message += `\nGESAMTSUMME: ${totalFareText}`;
 
-            // 3. Nachricht URL-kodieren
+            // 5. Nachricht URL-kodieren
             const encodedMessage = encodeURIComponent(message);
 
-            // 4. WhatsApp Link erstellen und öffnen
+            // 6. WhatsApp Link erstellen und SOFORT öffnen
             const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
-            
-            // Öffnet WhatsApp direkt in einem neuen Fenster/Tab
             window.open(whatsappUrl, '_blank');
         }
 
