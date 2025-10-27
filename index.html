@@ -53,8 +53,8 @@
     <div class="w-full max-w-lg sticky-header bg-indigo-700 p-5 md:p-6">
         <h2 class="text-sm font-semibold text-indigo-300 mb-1 uppercase tracking-wider">Ihr aktueller Fahrpreis:</h2>
         <div class="flex justify-between items-end">
-            <span class="text-3xl font-bold text-white">Gesamt</span>
             <span id="totalFare" class="text-5xl font-extrabold text-green-300">8,50 €</span>
+            <span class="text-3xl font-bold text-white">Gesamt</span>
         </div>
     </div>
 
@@ -65,23 +65,12 @@
 
         <div class="space-y-6">
 
-            <!-- NEU: Eingabefeld für Fahrgastname (optional) -->
-            <div>
-                <label for="passengerNameInput" class="block text-sm font-semibold text-gray-700 mb-1">
-                    Name des Fahrgastes (Optional)
-                </label>
-                <input type="text" id="passengerNameInput" value=""
-                        placeholder="Z.B. Max Mustermann"
-                        class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
-                        aria-label="Name des Fahrgastes">
-            </div>
-
             <!-- Fahrstrecke -->
             <div>
                 <label for="distanceKm" class="block text-sm font-semibold text-gray-700 mb-1">
                     Fahrstrecke (km)
                 </label>
-                <input type="number" id="distanceKm" value="" min="0" step="0.1"
+                <input type="number" id="distanceKm" min="0" step="0.1"
                         placeholder="Bitte km eingeben"
                         oninput="calculateFare()"
                         class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
@@ -93,12 +82,33 @@
                 <label for="waitingMinutes" class="block text-sm font-semibold text-gray-700 mb-1">
                     Stand-/Wartezeit (Minuten)
                 </label>
-                <input type="number" id="waitingMinutes" value="" min="0" step="1"
+                <input type="number" id="waitingMinutes" min="0" step="1"
                         placeholder="Wartezeit in Minuten eingeben"
                         oninput="calculateFare()"
                         class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
                         aria-label="Wartezeit in Minuten">
             </div>
+
+            <!-- Anfahrtskosten Dropdown (AKTUALISIERT) -->
+            <div>
+                <label for="arrivalSurcharge" class="block text-sm font-semibold text-gray-700 mb-1">
+                    Anfahrtspauschale
+                </label>
+                <select id="arrivalSurcharge" onchange="calculateFare()"
+                        class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none appearance-none bg-white pr-8"
+                        aria-label="Anfahrtskosten auswählen">
+                    <option value="0.00">Anfahrtskosten auswählen</option>
+                    <option value="5.00">5,00 €</option>
+                    <option value="10.00">10,00 €</option>
+                    <option value="15.00">15,00 €</option>
+                    <option value="20.00">20,00 €</option>
+                    <option value="25.00">25,00 €</option>
+                    <option value="30.00">30,00 €</option>
+                    <option value="40.00">40,00 €</option>
+                    <option value="50.00">50,00 €</option>
+                </select>
+            </div>
+
 
             <!-- Zuschläge -->
             <div class="space-y-4 pt-2 pb-4 border-t border-b">
@@ -130,7 +140,7 @@
             
             <button onclick="shareViaWhatsapp()" 
                     class="w-full bg-green-500 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-150 ease-in-out">
-                Per WhatsApp teilen (Direkt) 📲
+                Per WhatsApp teilen (Name wird abgefragt) 📲
             </button>
         </div>
 
@@ -150,7 +160,12 @@
                     <span>Wartezeitkosten (0,75 €/Min):</span>
                     <span id="detailWaitingCost" class="font-medium text-gray-800">0,00 €</span>
                 </div>
+                <!-- Anfahrtskosten Detail -->
                 <div class="flex justify-between text-gray-600 border-t pt-3 mt-3 border-dashed">
+                    <span class="text-sm">Anfahrtspauschale:</span>
+                    <span id="detailArrivalSurcharge" class="font-medium text-red-500">0,00 €</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
                     <span class="text-sm">Nachtzuschlag (1,50 €):</span>
                     <span id="detailNightSurcharge" class="font-medium text-red-500">0,00 €</span>
                 </div>
@@ -178,7 +193,6 @@
 
         // Hilfsfunktion zur Formatierung als Währung (Deutsch)
         function formatCurrency(amount) {
-            // Stellt sicher, dass die Währungsanzeige korrekt ist (z.B. 12,34 €)
             return amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
         }
 
@@ -195,12 +209,14 @@
             const waitingInput = document.getElementById('waitingMinutes');
             const nightCheckbox = document.getElementById('isNight');
             const wheelchairCheckbox = document.getElementById('isWheelchair');
+            const arrivalSelect = document.getElementById('arrivalSurcharge'); 
 
             const distanceKm = Math.max(0, parseFloat(distanceInput.value) || 0);
             const waitingMinutes = Math.max(0, parseInt(waitingInput.value, 10) || 0);
             
             const isNight = nightCheckbox.checked;
             const isWheelchair = wheelchairCheckbox.checked;
+            const arrivalSurchargeCost = parseFloat(arrivalSelect.value) || 0; // Anfahrtspauschale
 
             let totalFare = 0;
             let distanceCost = 0;
@@ -223,8 +239,9 @@
                 wheelchairSurcharge = TARIFFS.WHEELCHAIR_SURCHARGE;
             }
 
-            // 4. Gesamtfahrpreis
-            totalFare = baseFare + distanceCost + waitingCost + nightSurcharge + wheelchairSurcharge;
+            // 4. Gesamtfahrpreis (inklusive Anfahrtspauschale)
+            totalFare = baseFare + distanceCost + waitingCost + arrivalSurchargeCost + nightSurcharge + wheelchairSurcharge;
+            
             // Rundet auf zwei Dezimalstellen
             totalFare = Math.round(totalFare * 100) / 100;
 
@@ -235,6 +252,7 @@
             document.getElementById('detailBaseFare').textContent = formatCurrency(baseFare);
             document.getElementById('detailDistanceCost').textContent = formatCurrency(distanceCost);
             document.getElementById('detailWaitingCost').textContent = formatCurrency(waitingCost);
+            document.getElementById('detailArrivalSurcharge').textContent = formatCurrency(arrivalSurchargeCost); 
             document.getElementById('detailNightSurcharge').textContent = formatCurrency(nightSurcharge);
             document.getElementById('detailWheelchairSurcharge').textContent = formatCurrency(wheelchairSurcharge);
             document.getElementById('detailTotalSum').textContent = formatCurrency(totalFare);
@@ -244,36 +262,40 @@
          * Setzt alle Eingabefelder auf ihren Standardwert (leer oder false) zurück und berechnet neu.
          */
         function resetInputs() {
-            // Setzt auch das neue Namensfeld zurück
-            document.getElementById('passengerNameInput').value = ''; 
             document.getElementById('distanceKm').value = ''; 
             document.getElementById('waitingMinutes').value = '';
             document.getElementById('isNight').checked = false;
             document.getElementById('isWheelchair').checked = false;
+            document.getElementById('arrivalSurcharge').value = '0.00'; // Setzt Dropdown auf Standard
             
             calculateFare();
         }
 
         /**
-         * Teilt den berechneten Fahrpreis per WhatsApp OHNE Rückfrage.
-         * Liest den Namen direkt aus dem neuen Eingabefeld.
+         * Teilt den berechneten Fahrpreis per WhatsApp und fragt den Namen über ein Prompt-Fenster ab.
          */
         function shareViaWhatsapp() {
-            // 1. Gesamtfahrpreis abrufen
+            // Gesamtfahrpreis abrufen
             const totalFareText = document.getElementById('totalFare').textContent;
 
-            // 2. Name DIREKT aus dem Eingabefeld lesen (kein prompt)
-            const passengerNameInput = document.getElementById('passengerNameInput');
-            // Wenn das Feld leer ist, wird ein Standardname verwendet, um den Fluss nicht zu unterbrechen
-            let passengerName = passengerNameInput.value.trim() || "der Fahrgast"; 
+            // Name des Fahrgastes über das Prompt-Fenster abfragen (wie gewünscht)
+            const passengerName = prompt("Bitte geben Sie den Namen des Fahrgastes ein:");
 
-            // 3. Eingabewerte für Details abrufen
+            // Abbruch, falls kein Name eingegeben wurde oder auf Abbrechen geklickt wurde
+            if (!passengerName) {
+                // Keine alert() verwenden, nur im Fehlerfall loggen und beenden
+                console.error("WhatsApp-Vorgang abgebrochen, da kein Name eingegeben wurde.");
+                return;
+            }
+            
+            // Eingabewerte für Details abrufen
             const distanceKm = parseFloat(document.getElementById('distanceKm').value) || 0;
             const waitingMinutes = parseInt(document.getElementById('waitingMinutes').value, 10) || 0;
+            const arrivalSurchargeCost = parseFloat(document.getElementById('arrivalSurcharge').value) || 0; 
             const isNight = document.getElementById('isNight').checked;
             const isWheelchair = document.getElementById('isWheelchair').checked;
             
-            // 4. Detaillierte Nachricht konstruieren
+            // Detaillierte Nachricht konstruieren
             let message = `Fahrt von ${passengerName} kostet ${totalFareText}.\n\n`;
             message += `DETAILS:\n`;
             message += `Grundgebühr: ${formatCurrency(TARIFFS.BASE_FARE)}\n`;
@@ -288,6 +310,11 @@
                 message += `Wartezeit (${waitingMinutes} Min): ${formatCurrency(waitingCost)}\n`;
             }
             
+            // Anfahrtspauschale nur hinzufügen, wenn > 0
+            if (arrivalSurchargeCost > 0) {
+                 message += `Anfahrtspauschale: ${formatCurrency(arrivalSurchargeCost)}\n`;
+            }
+
             if (isNight) {
                 message += `Nachtzuschlag: ${formatCurrency(TARIFFS.NIGHT_SURCHARGE)}\n`;
             }
@@ -299,10 +326,10 @@
             // Endsumme hinzufügen
             message += `\nGESAMTSUMME: ${totalFareText}`;
 
-            // 5. Nachricht URL-kodieren
+            // Nachricht URL-kodieren
             const encodedMessage = encodeURIComponent(message);
 
-            // 6. WhatsApp Link erstellen und SOFORT öffnen
+            // WhatsApp Link erstellen und öffnen
             const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
             window.open(whatsappUrl, '_blank');
         }
