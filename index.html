@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TaxiRechner">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxifahrpreisrechner - Premium-Version</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2ff; /* Helles Blau-Lila */
+            padding-top: 150px; /* Platz für den fixierten Header (Höhe ca. 110px + Puffer) */
+        }
+        .card {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .input-style {
+            transition: all 0.2s;
+            border-color: #e5e7eb;
+            background-color: #f9fafb;
+        }
+        .input-style:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.5);
+        }
+        /* Sticky Header Style */
+        .sticky-header {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 512px; /* max-w-lg */
+            z-index: 100;
+            border-bottom-left-radius: 1rem;
+            border-bottom-right-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="p-4 flex flex-col items-center min-h-screen">
+
+    <div class="w-full max-w-lg sticky-header bg-indigo-700 p-5 md:p-6">
+        <h2 class="text-sm font-semibold text-indigo-300 mb-1 uppercase tracking-wider">Ihr aktueller Fahrpreis:</h2>
+        <div class="flex justify-between items-end">
+            <span class="text-3xl font-bold text-white">Gesamt</span>
+            <span id="totalFare" class="text-5xl font-extrabold text-green-300">8,50 €</span>
+        </div>
+    </div>
+
+    <div class="w-full max-w-lg card bg-white rounded-xl p-6 md:p-8">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Preisdetails eingeben</h1>
+        <p class="text-gray-500 mb-8 border-b pb-4">Geben Sie Ihre Fahrtparameter ein, um die Gesamtkosten zu berechnen.</p>
+
+        <div class="space-y-6">
+
+            <div>
+                <label for="distanceKm" class="block text-sm font-semibold text-gray-700 mb-1">
+                    Fahrstrecke (km)
+                </label>
+                <input type="number" id="distanceKm" value="" min="0" step="0.1"
+                       placeholder="Bitte km eingeben"
+                       oninput="calculateFare()"
+                       class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
+                       aria-label="Fahrstrecke in Kilometern">
+            </div>
+
+            <div>
+                <label for="waitingMinutes" class="block text-sm font-semibold text-gray-700 mb-1">
+                    Stand-/Wartezeit (Minuten)
+                </label>
+                <input type="number" id="waitingMinutes" value="" min="0" step="1"
+                       placeholder="Wartezeit in Minuten eingeben"
+                       oninput="calculateFare()"
+                       class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
+                       aria-label="Wartezeit in Minuten">
+            </div>
+
+            <div class="space-y-4 pt-2 pb-4 border-t border-b">
+                <p class="text-sm font-semibold text-gray-700">Optionale Zuschläge:</p>
+                
+                <div class="flex items-center">
+                    <input id="isNight" type="checkbox" onchange="calculateFare()"
+                           class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                           aria-label="Nachtzuschlag aktivieren">
+                    <label for="isNight" class="ml-3 text-base font-medium text-gray-700">
+                        Nachtfahrt (22:00 - 06:00 Uhr)
+                    </label>
+                </div>
+                
+                <div class="flex items-center">
+                    <input id="isWheelchair" type="checkbox" onchange="calculateFare()"
+                           class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                           aria-label="Rollstuhlzuschlag aktivieren">
+                    <label for="isWheelchair" class="ml-3 text-base font-medium text-gray-700">
+                        Rollstuhlzuschlag
+                    </label>
+                </div>
+            </div>
+            
+             <button onclick="resetInputs()" 
+                    class="w-full bg-gray-200 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-300 transition duration-150 ease-in-out">
+                Eingaben löschen 🗑️
+            </button>
+            
+            <button onclick="shareViaWhatsapp()" 
+                    class="w-full bg-green-500 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-150 ease-in-out">
+                Per WhatsApp teilen 📲
+            </button>
+        </div>
+
+        <div class="mt-8 border-t pt-6 bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-xl font-extrabold text-gray-800 mb-4 border-b pb-2">Kosten-Aufschlüsselung</h3>
+            <div class="space-y-3 text-base">
+                <div class="flex justify-between text-gray-600">
+                    <span>Grundgebühr (8,50 €):</span>
+                    <span id="detailBaseFare" class="font-medium text-gray-800">8,50 €</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>Distanzkosten (2,50 €/km):</span>
+                    <span id="detailDistanceCost" class="font-medium text-gray-800">0,00 €</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>Wartezeitkosten (0,75 €/Min):</span>
+                    <span id="detailWaitingCost" class="font-medium text-gray-800">0,00 €</span>
+                </div>
+                <div class="flex justify-between text-gray-600 border-t pt-3 mt-3 border-dashed">
+                    <span class="text-sm">Nachtzuschlag (1,50 €):</span>
+                    <span id="detailNightSurcharge" class="font-medium text-red-500">0,00 €</span>
+                </div>
+                 <div class="flex justify-between text-gray-600">
+                    <span class="text-sm">Rollstuhlzuschlag (10,00 €):</span>
+                    <span id="detailWheelchairSurcharge" class="font-medium text-red-500">0,00 €</span>
+                </div>
+                <div class="flex justify-between font-extrabold text-2xl text-indigo-700 pt-4 border-t mt-4">
+                    <span>SUMME:</span>
+                    <span id="detailTotalSum">8,50 €</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tarife (Unverändert)
+        const TARIFFS = {
+            BASE_FARE: 8.50,
+            DISTANCE_RATE_PER_KM: 2.50,
+            NIGHT_SURCHARGE: 1.50,
+            WHEELCHAIR_SURCHARGE: 10.00,
+            WAITING_RATE_PER_MINUTE: 0.75
+        };
+
+        // Hilfsfunktion zur Formatierung als Währung (Deutsch)
+        function formatCurrency(amount) {
+            return amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+        }
+
+        // Berechnet die Distanzkosten (Unverändert)
+        function calculateDistanceCost(distanceKm) {
+            return distanceKm * TARIFFS.DISTANCE_RATE_PER_KM;
+        }
+
+        /**
+         * Hauptfunktion zur Berechnung des Fahrpreises.
+         */
+        function calculateFare() {
+            const distanceInput = document.getElementById('distanceKm');
+            const waitingInput = document.getElementById('waitingMinutes');
+            const nightCheckbox = document.getElementById('isNight');
+            const wheelchairCheckbox = document.getElementById('isWheelchair');
+
+            const distanceKm = Math.max(0, parseFloat(distanceInput.value) || 0);
+            const waitingMinutes = Math.max(0, parseInt(waitingInput.value, 10) || 0);
+            
+            const isNight = nightCheckbox.checked;
+            const isWheelchair = wheelchairCheckbox.checked;
+
+            let totalFare = 0;
+            let distanceCost = 0;
+            let waitingCost = 0;
+            let nightSurcharge = 0;
+            let wheelchairSurcharge = 0;
+            let baseFare = TARIFFS.BASE_FARE;
+
+            // 1. Distanzkosten
+            distanceCost = calculateDistanceCost(distanceKm);
+
+            // 2. Wartezeitkosten
+            waitingCost = waitingMinutes * TARIFFS.WAITING_RATE_PER_MINUTE;
+
+            // 3. Zuschläge
+            if (isNight) {
+                nightSurcharge = TARIFFS.NIGHT_SURCHARGE;
+            }
+            if (isWheelchair) {
+                wheelchairSurcharge = TARIFFS.WHEELCHAIR_SURCHARGE;
+            }
+
+            // 4. Gesamtfahrpreis
+            totalFare = baseFare + distanceCost + waitingCost + nightSurcharge + wheelchairSurcharge;
+            totalFare = Math.round(totalFare * 100) / 100;
+
+            // Ergebnis im UI anzeigen
+            document.getElementById('totalFare').textContent = formatCurrency(totalFare);
+
+            // Aufschlüsselung aktualisieren
+            document.getElementById('detailBaseFare').textContent = formatCurrency(baseFare);
+            document.getElementById('detailDistanceCost').textContent = formatCurrency(distanceCost);
+            document.getElementById('detailWaitingCost').textContent = formatCurrency(waitingCost);
+            document.getElementById('detailNightSurcharge').textContent = formatCurrency(nightSurcharge);
+            document.getElementById('detailWheelchairSurcharge').textContent = formatCurrency(wheelchairSurcharge);
+            document.getElementById('detailTotalSum').textContent = formatCurrency(totalFare);
+        }
+        
+        /**
+         * Setzt alle Eingabefelder auf ihren Standardwert (leer oder false) zurück und berechnet neu.
+         */
+        function resetInputs() {
+            document.getElementById('distanceKm').value = ''; 
+            document.getElementById('waitingMinutes').value = '';
+            document.getElementById('isNight').checked = false;
+            document.getElementById('isWheelchair').checked = false;
+            
+            calculateFare();
+        }
+
+        /**
+         * NEU: Teilt den berechneten Fahrpreis per WhatsApp.
+         * Fragt den Namen des Fahrgastes ab und erstellt eine detaillierte Nachricht.
+         */
+        function shareViaWhatsapp() {
+            // Gesamtfahrpreis abrufen
+            const totalFareText = document.getElementById('totalFare').textContent;
+
+            // Namen des Fahrgastes abfragen
+            const passengerName = prompt("Bitte geben Sie den Namen des Fahrgastes ein:");
+
+            // Abbruch, falls kein Name eingegeben wurde
+            if (!passengerName) {
+                alert("Der Vorgang wurde abgebrochen, da kein Name eingegeben wurde.");
+                return;
+            }
+            
+            // Eingabewerte für Details abrufen
+            const distanceKm = parseFloat(document.getElementById('distanceKm').value) || 0;
+            const waitingMinutes = parseInt(document.getElementById('waitingMinutes').value, 10) || 0;
+            const isNight = document.getElementById('isNight').checked;
+            const isWheelchair = document.getElementById('isWheelchair').checked;
+            
+            // 2. Detaillierte Nachricht konstruieren
+            let message = `Fahrt von ${passengerName} kostet ${totalFareText}.\n\n`;
+            message += `DETAILS:\n`;
+            message += `Grundgebühr: ${formatCurrency(TARIFFS.BASE_FARE)}\n`;
+            
+            // Distanz nur hinzufügen, wenn > 0 km
+            if (distanceKm > 0) {
+                const distanceCost = calculateDistanceCost(distanceKm);
+                message += `Distanzkosten (${distanceKm} km): ${formatCurrency(distanceCost)}\n`;
+            }
+            
+            // Wartezeit nur hinzufügen, wenn > 0 Minuten
+            if (waitingMinutes > 0) {
+                const waitingCost = waitingMinutes * TARIFFS.WAITING_RATE_PER_MINUTE;
+                message += `Wartezeit (${waitingMinutes} Min): ${formatCurrency(waitingCost)}\n`;
+            }
+            
+            // Nachtzuschlag nur hinzufügen, wenn aktiviert
+            if (isNight) {
+                message += `Nachtzuschlag: ${formatCurrency(TARIFFS.NIGHT_SURCHARGE)}\n`;
+            }
+            
+            // Rollstuhlzuschlag nur hinzufügen, wenn aktiviert
+            if (isWheelchair) {
+                message += `Rollstuhlzuschlag: ${formatCurrency(TARIFFS.WHEELCHAIR_SURCHARGE)}\n`;
+            }
+
+            // Endsumme hinzufügen
+            message += `\nGESAMTSUMME: ${totalFareText}`;
+
+            // 3. Nachricht URL-kodieren
+            const encodedMessage = encodeURIComponent(message);
+
+            // 4. WhatsApp Link erstellen und öffnen
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+            
+            // Öffnet WhatsApp direkt in einem neuen Fenster/Tab
+            window.open(whatsappUrl, '_blank');
+        }
+
+
+        // Berechnen Sie den Preis beim ersten Laden der Seite, um den Standardwert anzuzeigen
+        window.onload = calculateFare;
+
+    </script>
+</body>
+</html>
