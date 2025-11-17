@@ -164,7 +164,7 @@
                                 oninput="calculateFare()"
                                 class="input-style w-full p-3 border rounded-lg text-lg focus:outline-none"
                                 autocomplete="off" 
-                                value="0"> 
+                                value=""> 
                     </div>
 
                     <div class="flex items-center">
@@ -255,9 +255,9 @@
             NIGHT_SURCHARGE: 1.50,
             WHEELCHAIR_SURCHARGE: 10.00,
             WAITING_RATE_PER_MINUTE: 0.75,
-            STAIR_RATE_PER_STEP: 12.00, // NEU
-            COMPANY_WHEELCHAIR_SURCHARGE: 12.00, // NEU
-            STAIR_CLIMBER_SURCHARGE: 30.00 // NEU
+            STAIR_RATE_PER_STEP: 12.00, 
+            COMPANY_WHEELCHAIR_SURCHARGE: 12.00, 
+            STAIR_CLIMBER_SURCHARGE: 30.00 
         };
 
         // Hilfsfunktion zur Formatierung als Währung (Deutsch)
@@ -288,7 +288,7 @@
                 optionsDiv.classList.add('hidden-transition');
                 
                 // Setze die Werte der eingeblendeten Felder zurück, wenn Tragestuhl deaktiviert wird
-                stairCountInput.value = '0';
+                stairCountInput.value = ''; // WICHTIG: Leeren, um Platzhalter sichtbar zu machen
                 companyWheelchairCheckbox.checked = false;
                 stairClimberCheckbox.checked = false;
             }
@@ -305,7 +305,7 @@
             const wheelchairCheckbox = document.getElementById('isWheelchair');
             const arrivalSelect = document.getElementById('arrivalSurcharge');
             
-            // NEU: Tragestuhl-Elemente
+            // Tragestuhl-Elemente
             const carryChairCheckbox = document.getElementById('isCarryChair');
             const stairCountInput = document.getElementById('stairCount');
             const companyWheelchairCheckbox = document.getElementById('isCompanyWheelchair');
@@ -318,9 +318,10 @@
             const isWheelchair = wheelchairCheckbox.checked;
             const arrivalSurchargeCost = parseFloat(arrivalSelect.value) || 0; 
             
-            // NEUE Variablen
+            // Tragestuhl-Berechnung
             const isCarryChair = carryChairCheckbox.checked;
-            const stairCount = isCarryChair ? Math.max(0, parseInt(stairCountInput.value, 10) || 0) : 0;
+            // Wenn das Feld leer ist, ist der Wert 0
+            const stairCount = isCarryChair ? Math.max(0, parseInt(stairCountInput.value, 10) || 0) : 0; 
             const isCompanyWheelchair = isCarryChair && companyWheelchairCheckbox.checked;
             const isStairClimber = isCarryChair && stairClimberCheckbox.checked;
 
@@ -329,9 +330,9 @@
             let waitingCost = 0;
             let nightSurcharge = 0;
             let wheelchairSurcharge = 0;
-            let stairCost = 0; // NEU
-            let companyWheelchairCost = 0; // NEU
-            let stairClimberCost = 0; // NEU
+            let stairCost = 0; 
+            let companyWheelchairCost = 0; 
+            let stairClimberCost = 0; 
             let baseFare = TARIFFS.BASE_FARE;
 
             // 1. Distanzkosten
@@ -377,7 +378,7 @@
             document.getElementById('detailNightSurcharge').textContent = formatCurrency(nightSurcharge);
             document.getElementById('detailWheelchairSurcharge').textContent = formatCurrency(wheelchairSurcharge);
 
-            // NEU: Tragestuhl-Aufschlüsselung
+            // Tragestuhl-Aufschlüsselung
             document.getElementById('stairCountDisplay').textContent = stairCount;
             document.getElementById('detailStairCost').textContent = formatCurrency(stairCost);
             document.getElementById('detailCompanyWheelchair').textContent = formatCurrency(companyWheelchairCost);
@@ -396,7 +397,7 @@
             document.getElementById('isWheelchair').checked = false;
             document.getElementById('arrivalSurcharge').value = '0.00'; 
             
-            // NEU: Tragestuhl-Felder zurücksetzen
+            // Tragestuhl-Felder zurücksetzen
             document.getElementById('isCarryChair').checked = false;
             // Die dynamischen Optionen über die Toggle-Funktion zurücksetzen
             toggleCarryChairOptions(); 
@@ -423,9 +424,10 @@
             const isNight = document.getElementById('isNight').checked;
             const isWheelchair = document.getElementById('isWheelchair').checked;
             
-            // NEU: Tragestuhl-Werte
+            // Tragestuhl-Werte
             const isCarryChair = document.getElementById('isCarryChair').checked;
-            const stairCount = isCarryChair ? parseInt(document.getElementById('stairCount').value, 10) || 0 : 0;
+            // Wenn das Feld leer ist, ist der Wert 0
+            const stairCount = isCarryChair ? parseInt(document.getElementById('stairCount').value, 10) || 0 : 0; 
             const isCompanyWheelchair = isCarryChair && document.getElementById('isCompanyWheelchair').checked;
             const isStairClimber = isCarryChair && document.getElementById('isStairClimber').checked;
             
@@ -460,7 +462,7 @@
                 message += `Rollstuhlzuschlag: ${formatCurrency(wheelchairSurcharge)}\n`;
             }
 
-            // NEU: Tragestuhl-Details
+            // Tragestuhl-Details
             if (isCarryChair) {
                 message += `--- Tragestuhl-Zuschläge ---\n`;
                 if (stairCount > 0) {
