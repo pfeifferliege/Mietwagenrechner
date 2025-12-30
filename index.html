@@ -16,12 +16,11 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #eef2ff; /* Helles Blau-Lila */
-            padding-top: 250px; /* Platz für den fixierten Header (Höhe ca. 110px + Puffer) */
+            background-color: #eef2ff;
+            padding-top: 250px;
         }
         .card {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            /* NEU: Zusätzlicher Abstand oben für die weiße Karte, damit die Überschrift nicht überdeckt wird */
             margin-top: 45px;
         }
         .input-style {
@@ -33,20 +32,18 @@
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.5);
         }
-        /* Sticky Header Style */
         .sticky-header {
             position: fixed;
             top: 0;
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
-            max-width: 512px; /* max-w-lg */
+            max-width: 512px;
             z-index: 100;
             border-bottom-left-radius: 1rem;
             border-bottom-right-radius: 1rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        /* Zusätzlicher Style für die dynamisch eingeblendeten Felder */
         .hidden-transition {
             transition: opacity 0.3s ease-in-out, max-height 0.5s ease-in-out;
             opacity: 0;
@@ -56,9 +53,38 @@
         }
         .visible-transition {
             opacity: 1;
-            max-height: 200px; /* Ausreichend Platz für die Elemente */
+            max-height: 200px;
             margin-top: 1rem;
         }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(24px); }
     </style>
 </head>
 <body class="p-4 flex flex-col items-center min-h-screen">
@@ -66,7 +92,7 @@
     <div class="w-full max-w-lg sticky-header bg-indigo-700 p-5 md:p-6">
         <h2 class="text-sm font-semibold text-indigo-300 mb-1 uppercase tracking-wider">Ihr aktueller Fahrpreis:</h2>
         <div class="flex justify-between items-end">
-            <span id="totalFare" class="text-5xl font-extrabold text-green-300">8,50 €</span>
+            <span id="totalFare" class="text-5xl font-extrabold text-green-300">18,50 €</span>
             <span class="text-3xl font-bold text-white">Gesamt</span>
         </div>
     </div><br><br><br>
@@ -76,6 +102,14 @@
         <p class="text-gray-500 mb-8 border-b pb-4">Geben Sie Ihre Fahrtparameter ein, um die Gesamtkosten zu berechnen.</p>
 
         <div class="space-y-6">
+
+            <div class="flex items-center justify-between p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                <span class="text-base font-bold text-indigo-900">Liegendtransport</span>
+                <label class="switch">
+                    <input type="checkbox" id="isLying" onchange="calculateFare()">
+                    <span class="slider"></span>
+                </label>
+            </div>
 
             <div>
                 <label for="distanceKm" class="block text-sm font-semibold text-gray-700 mb-1">
@@ -125,15 +159,6 @@
 
             <div class="space-y-4 pt-2 pb-4 border-t border-b">
                 <p class="text-sm font-semibold text-gray-700">Optionale Zuschläge:</p>
-
-                <div class="flex items-center">
-                    <input id="isWheelchair" type="checkbox" onchange="calculateFare()"
-                            class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                            aria-label="Rollstuhlzuschlag aktivieren">
-                    <label for="isWheelchair" class="ml-3 text-base font-medium text-gray-700">
-                        Rollstuhlzuschlag
-                    </label>
-                </div>
 
                 <div class="flex items-center">
                     <input id="isNight" type="checkbox" onchange="calculateFare()"
@@ -220,11 +245,11 @@
             <h3 class="text-xl font-extrabold text-gray-800 mb-4 border-b pb-2">Kosten-Aufschlüsselung</h3>
             <div class="space-y-3 text-base">
                 <div class="flex justify-between text-gray-600">
-                    <span>Grundgebühr (8,50 €):</span>
-                    <span id="detailBaseFare" class="font-medium text-gray-800">8,50 €</span>
+                    <span>Grundgebühr (18,50 €):</span>
+                    <span id="detailBaseFare" class="font-medium text-gray-800">18,50 €</span>
                 </div>
                 <div class="flex justify-between text-gray-600">
-                    <span>Distanzkosten (2,50 €/km):</span>
+                    <span>Distanzkosten (<span id="kmRateDisplay">2,50</span> €/km):</span>
                     <span id="detailDistanceCost" class="font-medium text-gray-800">0,00 €</span>
                 </div>
                 <div class="flex justify-between text-gray-600">
@@ -232,16 +257,15 @@
                     <span id="detailWaitingCost" class="font-medium text-gray-800">0,00 €</span>
                 </div>
                 <div class="flex justify-between text-gray-600 border-t pt-3 mt-3 border-dashed">
+                    <span class="text-sm text-indigo-600 font-semibold" id="lyingLabel" style="display:none;">Liegendtransport aktiviert (5,00 €/km)</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
                     <span class="text-sm">Anfahrtspauschale:</span>
                     <span id="detailArrivalSurcharge" class="font-medium text-red-500">0,00 €</span>
                 </div>
                 <div class="flex justify-between text-gray-600">
                     <span class="text-sm">Nachtzuschlag (1,50 €):</span>
                     <span id="detailNightSurcharge" class="font-medium text-red-500">0,00 €</span>
-                </div>
-                 <div class="flex justify-between text-gray-600">
-                    <span class="text-sm">Rollstuhlzuschlag (10,00 €):</span>
-                    <span id="detailWheelchairSurcharge" class="font-medium text-red-500">0,00 €</span>
                 </div>
                 <div class="flex justify-between text-gray-600">
                     <span class="text-sm">Gepäck klein (15,00 €):</span>
@@ -266,78 +290,53 @@
 
                 <div class="flex justify-between font-extrabold text-2xl text-indigo-700 pt-4 border-t mt-4">
                     <span>SUMME:</span>
-                    <span id="detailTotalSum">8,50 €</span>
+                    <span id="detailTotalSum">18,50 €</span>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Tarife (ERWEITERT)
         const TARIFFS = {
-            BASE_FARE: 8.50,
-            DISTANCE_RATE_PER_KM: 2.50,
+            BASE_FARE: 18.50,
+            DISTANCE_RATE_NORMAL: 2.50,
+            DISTANCE_RATE_LYING: 5.00,
             NIGHT_SURCHARGE: 1.50,
-            WHEELCHAIR_SURCHARGE: 10.00,
             WAITING_RATE_PER_MINUTE: 0.75,
             STAIR_RATE_PER_STEP: 12.00,
             COMPANY_WHEELCHAIR_SURCHARGE: 12.00,
             STAIR_CLIMBER_SURCHARGE: 30.00,
-            // NEU: Gepäcktarife
             SMALL_LUGGAGE_SURCHARGE: 15.00,
             LARGE_LUGGAGE_SURCHARGE: 30.00
         };
 
-        // Hilfsfunktion zur Formatierung als Währung (Deutsch)
         function formatCurrency(amount) {
             return amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
         }
 
-        // Berechnet die Distanzkosten (Unverändert)
-        function calculateDistanceCost(distanceKm) {
-            return distanceKm * TARIFFS.DISTANCE_RATE_PER_KM;
-        }
-
-        /**
-         * Schaltet die Tragestuhl-Optionen ein oder aus.
-         */
         function toggleCarryChairOptions() {
             const isCarryChair = document.getElementById('isCarryChair').checked;
             const optionsDiv = document.getElementById('carryChairOptions');
-            const stairCountInput = document.getElementById('stairCount');
-            const companyWheelchairCheckbox = document.getElementById('isCompanyWheelchair');
-            const stairClimberCheckbox = document.getElementById('isStairClimber');
-
             if (isCarryChair) {
                 optionsDiv.classList.remove('hidden-transition');
                 optionsDiv.classList.add('visible-transition');
             } else {
                 optionsDiv.classList.remove('visible-transition');
                 optionsDiv.classList.add('hidden-transition');
-
-                // Setze die Werte der eingeblendeten Felder zurück, wenn Tragestuhl deaktiviert wird
-                stairCountInput.value = ''; // WICHTIG: Leeren, um Platzhalter sichtbar zu machen
-                companyWheelchairCheckbox.checked = false;
-                stairClimberCheckbox.checked = false;
+                document.getElementById('stairCount').value = '';
+                document.getElementById('isCompanyWheelchair').checked = false;
+                document.getElementById('isStairClimber').checked = false;
             }
         }
 
-
-        /**
-         * Hauptfunktion zur Berechnung des Fahrpreises.
-         */
         function calculateFare() {
+            const isLying = document.getElementById('isLying').checked;
             const distanceInput = document.getElementById('distanceKm');
             const waitingInput = document.getElementById('waitingMinutes');
             const nightCheckbox = document.getElementById('isNight');
-            const wheelchairCheckbox = document.getElementById('isWheelchair');
             const arrivalSelect = document.getElementById('arrivalSurcharge');
-
-            // NEU: Gepäck-Elemente
             const smallLuggageCheckbox = document.getElementById('isSmallLuggage');
             const largeLuggageCheckbox = document.getElementById('isLargeLuggage');
-
-            // Tragestuhl-Elemente
             const carryChairCheckbox = document.getElementById('isCarryChair');
             const stairCountInput = document.getElementById('stairCount');
             const companyWheelchairCheckbox = document.getElementById('isCompanyWheelchair');
@@ -345,225 +344,102 @@
 
             const distanceKm = Math.max(0, parseFloat(distanceInput.value) || 0);
             const waitingMinutes = Math.max(0, parseInt(waitingInput.value, 10) || 0);
-
-            const isNight = nightCheckbox.checked;
-            const isWheelchair = wheelchairCheckbox.checked;
             const arrivalSurchargeCost = parseFloat(arrivalSelect.value) || 0;
+            const stairCount = carryChairCheckbox.checked ? Math.max(0, parseInt(stairCountInput.value, 10) || 0) : 0;
 
-            // NEU: Gepäck-Status
-            const isSmallLuggage = smallLuggageCheckbox.checked;
-            const isLargeLuggage = largeLuggageCheckbox.checked;
+            const currentKmRate = isLying ? TARIFFS.DISTANCE_RATE_LYING : TARIFFS.DISTANCE_RATE_NORMAL;
 
-            // Tragestuhl-Berechnung
-            const isCarryChair = carryChairCheckbox.checked;
-            // Wenn das Feld leer ist, ist der Wert 0
-            const stairCount = isCarryChair ? Math.max(0, parseInt(stairCountInput.value, 10) || 0) : 0;
-            const isCompanyWheelchair = isCarryChair && companyWheelchairCheckbox.checked;
-            const isStairClimber = isCarryChair && stairClimberCheckbox.checked;
+            document.getElementById('kmRateDisplay').textContent = currentKmRate.toLocaleString('de-DE', {minimumFractionDigits: 2});
+            document.getElementById('lyingLabel').style.display = isLying ? 'block' : 'none';
 
-            let totalFare = 0;
-            let distanceCost = 0;
-            let waitingCost = 0;
-            let nightSurcharge = 0;
-            let wheelchairSurcharge = 0;
-            // NEU: Gepäck-Kosten
-            let smallLuggageCost = 0;
-            let largeLuggageCost = 0;
+            let distanceCost = distanceKm * currentKmRate;
+            let waitingCost = waitingMinutes * TARIFFS.WAITING_RATE_PER_MINUTE;
+            let nightSurcharge = nightCheckbox.checked ? TARIFFS.NIGHT_SURCHARGE : 0;
+            let smallLuggageCost = smallLuggageCheckbox.checked ? TARIFFS.SMALL_LUGGAGE_SURCHARGE : 0;
+            let largeLuggageCost = largeLuggageCheckbox.checked ? TARIFFS.LARGE_LUGGAGE_SURCHARGE : 0;
+            
             let stairCost = 0;
             let companyWheelchairCost = 0;
             let stairClimberCost = 0;
-            let baseFare = TARIFFS.BASE_FARE;
 
-            // 1. Distanzkosten
-            distanceCost = calculateDistanceCost(distanceKm);
-
-            // 2. Wartezeitkosten
-            waitingCost = waitingMinutes * TARIFFS.WAITING_RATE_PER_MINUTE;
-
-            // 3. Zuschläge (Standard)
-            if (isNight) {
-                nightSurcharge = TARIFFS.NIGHT_SURCHARGE;
-            }
-            if (isWheelchair) {
-                wheelchairSurcharge = TARIFFS.WHEELCHAIR_SURCHARGE;
-            }
-            // NEU: Gepäck-Kosten berechnen
-            if (isSmallLuggage) {
-                smallLuggageCost = TARIFFS.SMALL_LUGGAGE_SURCHARGE;
-            }
-            if (isLargeLuggage) {
-                largeLuggageCost = TARIFFS.LARGE_LUGGAGE_SURCHARGE;
-            }
-
-            // 4. Zuschläge (Tragestuhl)
-            if (isCarryChair) {
+            if (carryChairCheckbox.checked) {
                 stairCost = stairCount * TARIFFS.STAIR_RATE_PER_STEP;
-                if (isCompanyWheelchair) {
-                    companyWheelchairCost = TARIFFS.COMPANY_WHEELCHAIR_SURCHARGE;
-                }
-                if (isStairClimber) {
-                    stairClimberCost = TARIFFS.STAIR_CLIMBER_SURCHARGE;
-                }
+                if (companyWheelchairCheckbox.checked) companyWheelchairCost = TARIFFS.COMPANY_WHEELCHAIR_SURCHARGE;
+                if (stairClimberCheckbox.checked) stairClimberCost = TARIFFS.STAIR_CLIMBER_SURCHARGE;
             }
 
-
-            // 5. Gesamtfahrpreis
-            totalFare = baseFare + distanceCost + waitingCost + arrivalSurchargeCost + nightSurcharge + wheelchairSurcharge + smallLuggageCost + largeLuggageCost + stairCost + companyWheelchairCost + stairClimberCost;
-
-            // Rundet auf zwei Dezimalstellen
+            let totalFare = TARIFFS.BASE_FARE + distanceCost + waitingCost + arrivalSurchargeCost + nightSurcharge + smallLuggageCost + largeLuggageCost + stairCost + companyWheelchairCost + stairClimberCost;
             totalFare = Math.round(totalFare * 100) / 100;
 
-            // Ergebnis im UI anzeigen
             document.getElementById('totalFare').textContent = formatCurrency(totalFare);
-
-            // Aufschlüsselung aktualisieren
-            document.getElementById('detailBaseFare').textContent = formatCurrency(baseFare);
+            document.getElementById('detailBaseFare').textContent = formatCurrency(TARIFFS.BASE_FARE);
             document.getElementById('detailDistanceCost').textContent = formatCurrency(distanceCost);
             document.getElementById('detailWaitingCost').textContent = formatCurrency(waitingCost);
             document.getElementById('detailArrivalSurcharge').textContent = formatCurrency(arrivalSurchargeCost);
             document.getElementById('detailNightSurcharge').textContent = formatCurrency(nightSurcharge);
-            document.getElementById('detailWheelchairSurcharge').textContent = formatCurrency(wheelchairSurcharge);
-
-            // NEU: Gepäck-Aufschlüsselung
             document.getElementById('detailSmallLuggage').textContent = formatCurrency(smallLuggageCost);
             document.getElementById('detailLargeLuggage').textContent = formatCurrency(largeLuggageCost);
-
-            // Tragestuhl-Aufschlüsselung
             document.getElementById('stairCountDisplay').textContent = stairCount;
             document.getElementById('detailStairCost').textContent = formatCurrency(stairCost);
             document.getElementById('detailCompanyWheelchair').textContent = formatCurrency(companyWheelchairCost);
             document.getElementById('detailStairClimber').textContent = formatCurrency(stairClimberCost);
-
             document.getElementById('detailTotalSum').textContent = formatCurrency(totalFare);
         }
 
-        /**
-         * Setzt alle Eingabefelder auf ihren Standardwert (leer oder false) zurück und berechnet neu.
-         */
         function resetInputs() {
+            document.getElementById('isLying').checked = false;
             document.getElementById('distanceKm').value = '';
             document.getElementById('waitingMinutes').value = '';
             document.getElementById('isNight').checked = false;
-            document.getElementById('isWheelchair').checked = false;
             document.getElementById('arrivalSurcharge').value = '0.00';
-
-            // NEU: Gepäck-Felder zurücksetzen
             document.getElementById('isSmallLuggage').checked = false;
             document.getElementById('isLargeLuggage').checked = false;
-
-            // Tragestuhl-Felder zurücksetzen
             document.getElementById('isCarryChair').checked = false;
-            // Die dynamischen Optionen über die Toggle-Funktion zurücksetzen
             toggleCarryChairOptions();
-
             calculateFare();
         }
 
-        /**
-         * Teilt den berechneten Fahrpreis per WhatsApp und fragt den Namen über ein Prompt-Fenster ab.
-         */
         function shareViaWhatsapp() {
             const totalFareText = document.getElementById('totalFare').textContent;
             const passengerName = prompt("Bitte geben Sie den Namen des Fahrgastes ein:");
+            if (!passengerName) return;
 
-            if (!passengerName) {
-                console.error("WhatsApp-Vorgang abgebrochen, da kein Name eingegeben wurde.");
-                return;
-            }
-
-            // Eingabewerte für Details abrufen
+            const isLying = document.getElementById('isLying').checked;
             const distanceKm = parseFloat(document.getElementById('distanceKm').value) || 0;
-            const waitingMinutes = parseInt(document.getElementById('waitingMinutes').value, 10) || 0;
-            const arrivalSurchargeCost = parseFloat(document.getElementById('arrivalSurcharge').value) || 0;
-            const isNight = document.getElementById('isNight').checked;
-            const isWheelchair = document.getElementById('isWheelchair').checked;
-            // NEU: Gepäck-Werte
-            const isSmallLuggage = document.getElementById('isSmallLuggage').checked;
-            const isLargeLuggage = document.getElementById('isLargeLuggage').checked;
+            const currentKmRate = isLying ? TARIFFS.DISTANCE_RATE_LYING : TARIFFS.DISTANCE_RATE_NORMAL;
 
-            // Tragestuhl-Werte
-            const isCarryChair = document.getElementById('isCarryChair').checked;
-            // Wenn das Feld leer ist, ist der Wert 0
-            const stairCount = isCarryChair ? parseInt(document.getElementById('stairCount').value, 10) || 0 : 0;
-            const isCompanyWheelchair = isCarryChair && document.getElementById('isCompanyWheelchair').checked;
-            const isStairClimber = isCarryChair && document.getElementById('isStairClimber').checked;
-
-            // Berechnung für WhatsApp-Nachricht (muss dieselben Werte verwenden wie calculateFare)
-            const baseFare = TARIFFS.BASE_FARE;
-            const distanceCost = calculateDistanceCost(distanceKm);
-            const waitingCost = waitingMinutes * TARIFFS.WAITING_RATE_PER_MINUTE;
-            let nightSurcharge = isNight ? TARIFFS.NIGHT_SURCHARGE : 0;
-            let wheelchairSurcharge = isWheelchair ? TARIFFS.WHEELCHAIR_SURCHARGE : 0;
-            // NEU: Gepäck-Kosten
-            let smallLuggageCost = isSmallLuggage ? TARIFFS.SMALL_LUGGAGE_SURCHARGE : 0;
-            let largeLuggageCost = isLargeLuggage ? TARIFFS.LARGE_LUGGAGE_SURCHARGE : 0;
-            let stairCost = isCarryChair ? stairCount * TARIFFS.STAIR_RATE_PER_STEP : 0;
-            let companyWheelchairCost = isCompanyWheelchair ? TARIFFS.COMPANY_WHEELCHAIR_SURCHARGE : 0;
-            let stairClimberCost = isStairClimber ? TARIFFS.STAIR_CLIMBER_SURCHARGE : 0;
-
-            // Detaillierte Nachricht konstruieren
             let message = `Fahrt von ${passengerName} kostet ${totalFareText}.\n\n`;
             message += `DETAILS:\n`;
-            message += `Grundgebühr: ${formatCurrency(baseFare)}\n`;
+            message += `Grundgebühr: ${formatCurrency(TARIFFS.BASE_FARE)}\n`;
+            if (isLying) message += `Art: LIEGENDTRANSPORT (5,00 €/km)\n`;
+            if (distanceKm > 0) message += `Distanz (${distanceKm} km à ${formatCurrency(currentKmRate)}/km): ${formatCurrency(distanceKm * currentKmRate)}\n`;
+            
+            const waitMin = parseInt(document.getElementById('waitingMinutes').value, 10) || 0;
+            if (waitMin > 0) message += `Wartezeit: ${formatCurrency(waitMin * TARIFFS.WAITING_RATE_PER_MINUTE)}\n`;
+            
+            const arrSurcharge = parseFloat(document.getElementById('arrivalSurcharge').value) || 0;
+            if (arrSurcharge > 0) message += `Anfahrt: ${formatCurrency(arrSurcharge)}\n`;
+            
+            if (document.getElementById('isNight').checked) message += `Nachtzuschlag: ${formatCurrency(TARIFFS.NIGHT_SURCHARGE)}\n`;
+            if (document.getElementById('isSmallLuggage').checked) message += `Gepäck klein: ${formatCurrency(TARIFFS.SMALL_LUGGAGE_SURCHARGE)}\n`;
+            if (document.getElementById('isLargeLuggage').checked) message += `Gepäck groß: ${formatCurrency(TARIFFS.LARGE_LUGGAGE_SURCHARGE)}\n`;
 
-            if (distanceKm > 0) {
-                message += `Distanzkosten (${distanceKm} km): ${formatCurrency(distanceCost)}\n`;
-            }
-            if (waitingMinutes > 0) {
-                message += `Wartezeit (${waitingMinutes} Min): ${formatCurrency(waitingCost)}\n`;
-            }
-            if (arrivalSurchargeCost > 0) {
-                 message += `Anfahrtspauschale: ${formatCurrency(arrivalSurchargeCost)}\n`;
-            }
-            if (nightSurcharge > 0) {
-                message += `Nachtzuschlag: ${formatCurrency(nightSurcharge)}\n`;
-            }
-            if (wheelchairSurcharge > 0) {
-                message += `Rollstuhlzuschlag: ${formatCurrency(wheelchairSurcharge)}\n`;
-            }
-
-            // NEU: Gepäck-Details
-            if (smallLuggageCost > 0) {
-                message += `Gepäck klein: ${formatCurrency(smallLuggageCost)}\n`;
-            }
-            if (largeLuggageCost > 0) {
-                message += `Gepäck groß: ${formatCurrency(largeLuggageCost)}\n`;
-            }
-
-            // Tragestuhl-Details
-            if (isCarryChair) {
+            if (document.getElementById('isCarryChair').checked) {
                 message += `--- Tragestuhl-Zuschläge ---\n`;
-                if (stairCount > 0) {
-                    message += `Treppenkosten (${stairCount} St.): ${formatCurrency(stairCost)}\n`;
-                }
-                if (companyWheelchairCost > 0) {
-                    message += `Firmenrollstuhl: ${formatCurrency(companyWheelchairCost)}\n`;
-                }
-                if (stairClimberCost > 0) {
-                    message += `Treppenraupe: ${formatCurrency(stairClimberCost)}\n`;
-                }
+                const sCount = parseInt(document.getElementById('stairCount').value, 10) || 0;
+                if (sCount > 0) message += `Treppen (${sCount} St.): ${formatCurrency(sCount * TARIFFS.STAIR_RATE_PER_STEP)}\n`;
+                if (document.getElementById('isCompanyWheelchair').checked) message += `Firmenrollstuhl: ${formatCurrency(TARIFFS.COMPANY_WHEELCHAIR_SURCHARGE)}\n`;
+                if (document.getElementById('isStairClimber').checked) message += `Treppenraupe: ${formatCurrency(TARIFFS.STAIR_CLIMBER_SURCHARGE)}\n`;
             }
 
-            // Endsumme hinzufügen
             message += `\nGESAMTSUMME: ${totalFareText}`;
-
-            // Nachricht URL-kodieren
-            const encodedMessage = encodeURIComponent(message);
-
-            // WhatsApp Link erstellen und öffnen
-            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
-            window.open(whatsappUrl, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-
-        // Berechnen Sie den Preis beim ersten Laden der Seite, um den Standardwert anzuzeigen
         window.onload = function() {
-            // Initialen Zustand der Tragestuhl-Optionen setzen
             toggleCarryChairOptions();
-            // Initialen Preis berechnen
             calculateFare();
         }
-
     </script>
 </body>
 </html>
